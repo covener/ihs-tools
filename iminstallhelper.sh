@@ -15,8 +15,8 @@ usage() {
   printf "\n\t$0 install -r /path/to/driverdownload|URL -p com.ibm.... -i /opt/InstallRoot"
   printf "\n\nApply IFIX:"
   printf "\n\t$0 update -r /path/to/ifix.zip -i /opt/InstallRoot"
-  printf "\n\nRemove last IFIX:"
-  printf "\n\t$0 uninstall -i /opt/InstallRoot"
+  printf "\n\nRemove IFIX:"
+  printf "\n\t$0 uninstall-ifix -i /opt/InstallRoot"
   printf "\n\nInstall global IIM:"
   printf "\n\t$0 install-im"
   printf "\n\nOptions:\n" 
@@ -140,7 +140,12 @@ lisInstalledPackages() {
   PACKAGE=`$IMCL listInstalledPackages  -installationDirectory $INSTDIR $IMDATA_ARG | grep com.ibm`
   set +x
 }
-
+lisInstalledFixes() { 
+  echo "  Determing installed fixes in $INSTDIR..."
+  set -x
+  FIXES=`$IMCL listInstalledPackages  -installationDirectory $INSTDIR $IMDATA_ARG |grep WS- | tr '\n' ","`
+  set +x
+}
 listAvailableFixes() { 
   FIXES=""
   echo "  Determing available fixes in $PKGDL..."
@@ -217,11 +222,6 @@ checkRepoAuth() {
 }
 
 
-if [ $ACTION = "list" ] ; then
-  listAvailablePackages
-  exit 0
-fi
-
 if [ $ACTION = "install-im" ]; then
     echo "Trying to install global IIM"
     if [ -d "/opt/IBM/InstallationManager" ]; then
@@ -262,11 +262,18 @@ else
   INSTPREFIX=$HOME/inst
 fi
 
-if [ -z "$PKGS" ]; then
-  echo "Assuming -p list"
-  PKGS=list
+if [ $ACTION = "install" ]; then
+  if [-z "$PKGS" -o "$PKGS" = "list" ]; then
+    echo "Assuming -p list"
+    ACTION=list
+    PKGS=list
+  fi
 fi
 
+if [ $ACTION = "list" ] ; then
+  listAvailablePackages
+  exit 0
+fi
 
 # checkRepoAuth
 
@@ -275,12 +282,24 @@ OPKGS=$PKGS
 
 if [ $ACTION = "uninstall" ]; then
     set -x
-    INSTDIR=$UNINSTALL
     lisInstalledPackages
-    $IMCL $IMDATA_ARG uninstall $PACKAGE -installationDirectory $UNINSTALL 
+    $IMCL $IMDATA_ARG uninstall $PACKAGE -installationDirectory $INSTDIR
     set +x
     exit 0
 fi
+if [ $ACTION = "uninstall-ifix" ]; then
+    set -x
+    lisInstalledFixes
+    if [ ! $PKGS = "list" ]; then
+      $IMCL $IMDATA_ARG uninstall $PKGS -installationDirectory $INSTDIR
+    else 
+      echo "Pick an ifix and and re-run with -p: $FIXES"
+    fi
+    set +x
+
+    exit 0
+fi
+
 
 if [ $ACTION = "update" ];  then
   # Return value in PACKAGES
@@ -304,6 +323,7 @@ if [ $ACTION = "update" ];  then
   exit 0
 
 fi
+
 if [ $ACTION = "install" ]; then
     if echo $PKGS | grep v9 ; then
       # first package to install
