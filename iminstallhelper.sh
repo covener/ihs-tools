@@ -244,6 +244,7 @@ if [ $ACTION = "install-im" ]; then
     (cd /tmp/iimold && unzip /tmp/iimold.zip)
 
     # Use the unpacked IIM zip to install 1.8.5 from the repo.
+    echo "Updating from old IM to new IM..."
     /tmp/iimold/tools/imcl install com.ibm.cic.agent -acceptLicense  -repositories ftp://public.dhe.ibm.com/software/rationalsdp/v7/im/185/repository/
 
     IIMDL=/opt/IBM/InstallationManager
