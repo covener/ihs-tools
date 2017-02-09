@@ -241,7 +241,7 @@ if [ $ACTION = "install-im" ]; then
       esac
     fi 
     mkdir /tmp/iimold
-    (cd /tmp/iimold && unzip /tmp/iimold.zip)
+    (cd /tmp/iimold && unzip -q /tmp/iimold.zip)
 
     # Use the unpacked IIM zip to install 1.8.5 from the repo.
     echo "Updating from old IM to new IM..."
