@@ -1,1 +1,1 @@
-See http://github.ibm.com/plugin-tools for related stuff.
+See https://github.com/covener/plugin-tools for related stuff.
