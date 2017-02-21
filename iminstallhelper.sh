@@ -264,7 +264,7 @@ else
 fi
 
 if [ $ACTION = "install" ]; then
-  if [-z "$PKGS" -o "$PKGS" = "list" ]; then
+  if [ -z "$PKGS" -o "$PKGS" = "list" ]; then
     echo "Assuming -p list"
     ACTION=list
     PKGS=list
