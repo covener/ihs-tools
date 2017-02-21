@@ -13,6 +13,8 @@ usage() {
   printf "\n\t$0 install -r /path/to/driverdownload|URL -p com.ibm.... -i /opt/InstallRoot"
   printf "\n\nInstall fixpack (same as full install):"
   printf "\n\t$0 install -r /path/to/driverdownload|URL -p com.ibm.... -i /opt/InstallRoot"
+  printf "\n\nUninstall package :"
+  printf "\n\t$0 uninstall -i /opt/InstallRoot"
   printf "\n\nApply IFIX:"
   printf "\n\t$0 update -r /path/to/ifix.zip -i /opt/InstallRoot"
   printf "\n\nRemove IFIX:"
