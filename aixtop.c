@@ -16,10 +16,12 @@
 
 #include <libperfstat.h>
 #include <stdio.h>
+#include <sys/time.h>
 #include <stdlib.h>
 
 /* Based on https://www.ibm.com/developerworks/community/wikis/home?lang=en#/wiki/Power%20Systems/page/Programming%20CPU%20Utilization 
  * This is a hybrid of ps and topas to give instataneous/recent CPU usage rather than process lifetime / CPU seconds of ps.  
+ * make LDFLAGS=-lperfstat aixtop
  */
 
 void main (int argc, char *argv[])
@@ -28,12 +30,12 @@ void main (int argc, char *argv[])
     perfstat_process_t *oldppts;
     perfstat_process_t util;
     perfstat_id_t *ids;
-    int interval = 0;
+    useconds_t interval; /* uint */
     int count = 0;
     int i = 0;
 
     if (argc < 4) { 
-        fprintf(stderr, "%s: interval count pid1 [pid 2... pidN]\n", argv[0]);
+        fprintf(stderr, "%s: interval-in-millis count pid1 [pid 2... pidN]\n", argv[0]);
         exit(1);
     }
 
@@ -44,6 +46,10 @@ void main (int argc, char *argv[])
         fprintf(stderr, "%s: interval and count must be >0\n", argv[0]);
         exit(1);
     }
+    if (interval < 100)  { 
+        fprintf(stderr, "%s: WARNING: interval is %d but interpreted as milliseconds\n", argv[0], interval);
+        fprintf(stderr, "%s: WARNING: libperfstat seems to give bad data on small samples as well\n", argv[0]);
+    }
 
     /* over-allocated to match indeces */
     ppts = calloc(argc+1, sizeof(perfstat_process_t));
@@ -52,14 +58,18 @@ void main (int argc, char *argv[])
 
     for (i = 3; i < argc; i++) { 
         strcpy(ids[i].name, argv[i]);
-        perfstat_process(&ids[i], &oldppts[i], sizeof(perfstat_process_t),1);
     } 
 
     /* Print the headers */
     printf ("Pid        Cmd    SizeKB    Priority    User%%      Kernel%% \n");
 
     for (; count > 0; count--) { 
-        sleep(interval);
+        for (i = 3; i < argc; i++) { 
+            perfstat_process(&ids[i], &oldppts[i], sizeof(perfstat_process_t),1);
+        }
+
+        usleep(1000*interval);
+        
         for (i = 3; i < argc; i++) { 
             perfstat_rawdata_t buf;
             perfstat_process(&ids[i], &ppts[i], sizeof(perfstat_process_t),1);
@@ -74,6 +84,6 @@ void main (int argc, char *argv[])
             printf("%8lld %6s %9lld  %9d   %10.2f %10.2f \n",util.pid, util.proc_name, util.proc_size, util.proc_priority, (double)util.ucpu_time, (double)util.scpu_time);
             memcpy(oldppts[i], ppts[i], sizeof(perfstat_process_t));
         }
-        printf("\n");
     }
+    printf("\n");
 }
