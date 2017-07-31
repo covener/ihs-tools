@@ -21,7 +21,7 @@
 
 /* Based on https://www.ibm.com/developerworks/community/wikis/home?lang=en#/wiki/Power%20Systems/page/Programming%20CPU%20Utilization 
  * This is a hybrid of ps and topas to give instataneous/recent CPU usage rather than process lifetime / CPU seconds of ps.  
- * make LDFLAGS=-lperfstat aixtop
+ * make LDFLAGS=-lperfstat aixtop (AIX 6.1 is ideal compilation system)
  */
 
 void main (int argc, char *argv[])
