@@ -3,7 +3,7 @@
 # This script copies a letencrypt-downloaded certificate, chain, and key into a 
 # GSKit-compatible CMS file.
 
-DOMAIN=www.misers.org
+DOMAIN=www.example.com
 IHSROOT=$HOME/ihs90
 
 cd /etc/letsencrypt/live/$DOMAIN
