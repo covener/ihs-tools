@@ -276,8 +276,8 @@ fi
 if [ $ACTION = "list" ] ; then
   listAvailablePackages
   echo "Hint: Pick one normal offering and one java and re-invoke e.g:"
-  JAVAP=`echo $PKGS|grep com.ibm.java.jdk|head -1`
-  WASP=`echo $PKGS|grep com.ibm.websphere.ND|head -1`
+  JAVAP=`echo $PKGS | tr ' ' '\n' |grep com.ibm.java.jdk|head -1`
+  WASP=`echo $PKGS | tr ' ' '\n' |grep com.ibm.websphere.ND|head -1`
   echo "$0 install -r $PKGDL -i /opt/WAS90 -p \"$WASP $JAVAP\""
   exit 0
 fi
