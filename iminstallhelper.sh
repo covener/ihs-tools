@@ -90,6 +90,11 @@ fi
 STORAGE=$HOME/iim.storage
 MASTER=$HOME/iim.password
 
+if [ ! -f $MASTER ]; 
+  echo "save a master password to $MASTER with any editor, it's used to encrypt other passwords and you don't need to remember it"
+  exit 1
+fi
+
 # Override these for the local IM scenario
 IMDATA=""
 IMSHARED=""
@@ -209,7 +214,7 @@ checkRepoAuth() {
   
   
   if [ $NEED_AUTH -eq 1 -a ! -f "$STORAGE" ]; then
-    echo "No $STORAGE if your repo is GSA, stash a PW in ~/iim.password and run e.g. \n\n" 
+    echo "No $STORAGE if your repo is GSA, stash a random PW in ~/iim.password and run e.g. \n\n" 
     echo "\t $IMUTILSC  saveCredential -url $PKGDL -secureStorageFile $STORAGE_NATIVE  -masterPasswordFile $MASTER_NATIVE -userName youruser -userPassword yourpass" 
     exit 1
   fi
