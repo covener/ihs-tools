@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 # covener's script to list/install/patch whatever is found 
 # in an IM repository with an global or unzipped IIM.
@@ -28,6 +28,7 @@ usage() {
   exit 1
 }
 
+CYGWIN=0
 if [ $# -lt 1 ]; then
   usage
 fi
@@ -70,7 +71,7 @@ fi
 
 # Find the global IM unless -l was forced
 if [ x"$GLOBAL" = "x1" ]; then
-    POSSIBLE_GLOBAL_IMS="/c/opt/Moonstone/IM /opt/IM /opt/IBM/InstallationManager /opt/Moonstone/InstallationManager /opt/Moonstone/IM"
+    POSSIBLE_GLOBAL_IMS="/c/Moonstone/IM /c/opt/Moonstone/IM /opt/IM /opt/IBM/InstallationManager /opt/Moonstone/InstallationManager /opt/Moonstone/IM"
     for PIM in $POSSIBLE_GLOBAL_IMS; do
        if [ -x $PIM/eclipse/tools/imcl.exe ]; then
          IIMDL=$PIM
@@ -95,6 +96,14 @@ if [ ! -f $MASTER ];
   exit 1
 fi
 
+OS=`uname -s`
+FILTER=true
+case $OS in
+        CYGWIN*) FILTER=dos2unix
+                 CYGWIN=1
+             ;;
+esac
+ 
 # Override these for the local IM scenario
 IMDATA=""
 IMSHARED=""
@@ -138,19 +147,19 @@ listAvailablePackages() {
   set -x
   $IMCL listAvailablePackages -repositories $PKGDL $IMDATA_ARG -secureStorageFile $STORAGE_NATIVE  -masterPasswordFile $MASTER_NATIVE -prompt 
   set +x
-  PKGS=`$IMCL listAvailablePackages -repositories $PKGDL $IMDATA_ARG -secureStorageFile $STORAGE_NATIVE  -masterPasswordFile $MASTER_NATIVE -prompt`
+  PKGS=`$IMCL listAvailablePackages -repositories $PKGDL $IMDATA_ARG -secureStorageFile $STORAGE_NATIVE  -masterPasswordFile $MASTER_NATIVE -prompt|$FILTER`
 }
 
 lisInstalledPackages() { 
   echo "  Determing installed packages in $INSTDIR..."
   set -x
-  PACKAGE=`$IMCL listInstalledPackages  -installationDirectory $INSTDIR $IMDATA_ARG | grep com.ibm`
+  PACKAGE=`$IMCL listInstalledPackages  -installationDirectory $INSTDIR $IMDATA_ARG | $FILTER| grep com.ibm`
   set +x
 }
 lisInstalledFixes() { 
   echo "  Determing installed fixes in $INSTDIR..."
   set -x
-  FIXES=`$IMCL listInstalledPackages  -installationDirectory $INSTDIR $IMDATA_ARG |grep WS- | tr '\n' ","`
+  FIXES=`$IMCL listInstalledPackages  -installationDirectory $INSTDIR $IMDATA_ARG |$FILTER| grep WS- | tr '\n' ","`
   set +x
 }
 listAvailableFixes() { 
@@ -160,7 +169,7 @@ listAvailableFixes() {
   for PKG in $PACKAGE; do
    FIX=`$IMCL listAvailableFixes $PKG -repositories $PKGDL \
         $IMDATA_ARG \
-        -secureStorageFile $STORAGE_NATIVE  -masterPasswordFile $MASTER_NATIVE`
+        -secureStorageFile $STORAGE_NATIVE  -masterPasswordFile $MASTER_NATIVE|$FILTER`
    FIXES="$FIXES $FIX"
   done
   set +x
@@ -214,7 +223,7 @@ checkRepoAuth() {
   
   
   if [ $NEED_AUTH -eq 1 -a ! -f "$STORAGE" ]; then
-    echo "No $STORAGE if your repo is GSA, stash a random PW in ~/iim.password and run e.g. \n\n" 
+    echo "No $STORAGE if your repo is GSA, stash a PW in ~/iim.password and run e.g. \n\n" 
     echo "\t $IMUTILSC  saveCredential -url $PKGDL -secureStorageFile $STORAGE_NATIVE  -masterPasswordFile $MASTER_NATIVE -userName youruser -userPassword yourpass" 
     exit 1
   fi
@@ -244,6 +253,8 @@ if [ $ACTION = "install-im" ]; then
         AIX) wget -q ftp://public.dhe.ibm.com/software/rationalsdp/v7/im/16/zips/agent.installer.aix.motif.ppc_1.6.0.20120831_1216.zip -O /tmp/iimold.zip
              ;;
         Linux) wget -q ftp://public.dhe.ibm.com/software/rationalsdp/v7/im/16/zips/agent.installer.linux.gtk.x86_64_1.6.0.20120831_1216.zip -O /tmp/iimold.zip
+             ;;
+        CYGWIN*) wget -q ftp://public.dhe.ibm.com/software/rationalsdp/v7/im/16/zips/agent.installer.win32.win32.x86_1.6.0.20120831_1216.zip -O /tmp/iimold.zip
              ;;
       esac
     fi 
@@ -286,6 +297,7 @@ if [ $ACTION = "list" ] ; then
   WASBASEP=`echo $PKGS | tr ' ' '\n' |grep com.ibm.websphere.BASE|head -1`
   echo "$0 install -r $PKGDL -i /opt/WAS90 -p \"$WASNDP $JAVAP\""
   echo "$0 install -r $PKGDL -i /opt/WAS90 -p \"$WASBASEP $JAVAP\""
+
   exit 0
 fi
 
@@ -318,6 +330,10 @@ fi
 if [ $ACTION = "update" ];  then
   # Return value in PACKAGES
   lisInstalledPackages 
+
+  if [ $CYGWIN -eq 1 -a -f $PKGDL ]; then
+    PKGDL=`cygpath -m $PKGDL`
+  fi
   # Return value in FIXES 
   listAvailableFixes
   
