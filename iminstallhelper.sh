@@ -25,6 +25,12 @@ usage() {
   printf "\t -r specifies a repo -- zip or http/https\n"
   printf "\t -U/P are user/pass for online repos. You should be prompted w/o these\n"
   printf "\t -t forces a temporary IIM in the -i dir\n"
+  printf "\n\nRepos:\n" 
+  printf "\thttps://www.ibm.com/support/knowledgecenter/SSEQTP_9.0.5/com.ibm.websphere.installation.base.doc/ae/cins_repositories.html"
+  printf "\thttp://www.ibm.com/software/repositorymanager/com.ibm.websphere.IHS.v90"
+  printf "\n\nExamples:\n" 
+  printf "\tsudo $0 install -r http://www.ibm.com/software/repositorymanager/com.ibm.websphere.IHS.v90 -p \"com.ibm.websphere.IHS.v90 com.ibm.java.jdk.v8\" -i /opt/IHS90"
+  
   exit 1
 }
 
@@ -91,7 +97,7 @@ fi
 STORAGE=$HOME/iim.storage
 MASTER=$HOME/iim.password
 
-if [ ! -f $MASTER ]; 
+if [ ! -f $MASTER ]; then
   echo "save a master password to $MASTER with any editor, it's used to encrypt other passwords and you don't need to remember it"
   exit 1
 fi
@@ -261,9 +267,9 @@ if [ $ACTION = "install-im" ]; then
     mkdir /tmp/iimold
     (cd /tmp/iimold && unzip -q /tmp/iimold.zip)
 
-    # Use the unpacked IIM zip to install 1.8.5 from the repo.
+    # Use the unpacked IIM zip to install latest from from the repo.
     echo "Updating from old IM to new IM..."
-    /tmp/iimold/tools/imcl install com.ibm.cic.agent -acceptLicense  -repositories ftp://public.dhe.ibm.com/software/rationalsdp/v7/im/1894/repository/
+    /tmp/iimold/tools/imcl install com.ibm.cic.agent -acceptLicense
 
     IIMDL=/opt/IBM/InstallationManager
     IMCL=$IIMDL/eclipse/tools/imcl
