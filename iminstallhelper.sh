@@ -115,7 +115,7 @@ IMDATA=""
 IMSHARED=""
 if [ $GLOBAL -eq 0 ]; then
   IMDATA="$IIMDL/IM-data"
-  IMSHARED=$"IIMDL/IM-shared"
+  IMSHARED="$IIMDL/IM-shared"
 fi
 
 # Setup parameters for real command-line IM invocations
@@ -269,7 +269,7 @@ if [ $ACTION = "install-im" ]; then
 
     # Use the unpacked IIM zip to install latest from from the repo.
     echo "Updating from old IM to new IM..."
-    /tmp/iimold/tools/imcl install com.ibm.cic.agent -acceptLicense
+    /tmp/iimold/tools/imcl -repositories ftp://public.dhe.ibm.com/software/rationalsdp/v7/im/1913/repository/ install com.ibm.cic.agent -acceptLicense
 
     IIMDL=/opt/IBM/InstallationManager
     IMCL=$IIMDL/eclipse/tools/imcl
