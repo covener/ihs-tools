@@ -199,7 +199,7 @@ installFix() {
 }
 checkRepoAuth() {
   if [ ! -d "$PKGDL" -a ! -f "$PKGDL" ]; then
-    OUT=`wget --no-check-certificate "$PKGDL" 2>&1`
+    OUT=`wget --method=HEAD --no-check-certificate "$PKGDL" 2>&1`
     # modern wget
     if [ $? -eq 6 ]; then
       NEED_AUTH=1
