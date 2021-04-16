@@ -70,6 +70,13 @@ if [ $ACTION = "install" -o $ACTION = "update" -o $ACTION = "uninstall" ]; then
     fi
 fi
 
+NEEDPASS=1
+if echo $PKGDL|grep http >/dev/null; then
+NEEDPASS=1
+else
+NEEDPASS=0
+fi
+
 # Find the global IM unless -l was forced
 if [ x"$GLOBAL" = "x1" ]; then
     POSSIBLE_GLOBAL_IMS="/c/opt/Moonstone/IM /opt/IM /opt/IBM/InstallationManager /opt/Moonstone/InstallationManager /opt/Moonstone/IM"
@@ -128,12 +135,14 @@ if [ ! -f "$MASTER_NATIVE" ]; then
   exit 1
 fi
 
-if [ ! -f "$STORAGE_NATIVE" -a ! "$ACTION" = "addpass" -a ! "$ACTION" = "install-im" ]; then
-  echo "Unable to find secure storage file: $STORAGE_NATIVE. Use addpass command to create it."
-  exit 1
+if [ $NEEDPASS -eq "1" ]; then
+  if [ ! -f "$STORAGE_NATIVE" -a ! "$ACTION" = "addpass" -a ! "$ACTION" = "install-im" ]; then
+    echo "Unable to find secure storage file: $STORAGE_NATIVE. Use addpass command to create it."
+    exit 1
+  fi
+  AUTH_ARG="-secureStorageFile $STORAGE_NATIVE -masterPasswordFile $MASTER_NATIVE"
 fi
 
-AUTH_ARG="-secureStorageFile $STORAGE_NATIVE -masterPasswordFile $MASTER_NATIVE"
 
 if [ $GLOBAL -eq 0 ]; then
   IMDATA_ARG="-dataLocation $IMDATA_NATIVE"
