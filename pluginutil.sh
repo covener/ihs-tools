@@ -27,6 +27,7 @@ fi
 if [ $# -lt 3 ]; then
   echo "$0 list [ ... wsadmin args ]"
   echo "$0 generate|propagate|propagateKeyring webserver-name webserver-node-name [ ... wsadmin args ]"
+  echo "$0 ping|stop|start|restart webserver-name webserver-node-name [ ... wsadmin args ]"
   exit 1
 fi
 
