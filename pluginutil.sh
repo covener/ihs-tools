@@ -69,25 +69,23 @@ print "$WEBSERVER is %s" % (status)
 if status == "RUNNING":
     print "Stopping $WEBSERVER"
     AdminControl.invoke(mbean, 'stop', args)
+    print "Waiting for $WEBSERVER to stop"
+    for i in range(10):
+        if status == "STOPPED":
+            print "$WEBSERVER is stopped"
+            break
+        status = AdminControl.invoke(mbean, 'ping', args)
+        sleep(i)
+    else:
+       print "Timed out stopping $WEBSERVER"
 
-print "Waiting for $WEBSERVER to stop"
+AdminControl.invoke(mbean, 'start', args)
 for i in range(10):
-    if status == "STOPPED":
-        print "$WEBSERVER is stopped, starting"
-        AdminControl.invoke(mbean, 'start', args)
-        break
-    status = AdminControl.invoke(mbean, 'ping', args)
-    sleep(i)
-else:
-   print "Timed out stopping $WEBSERVER"
-
-status = AdminControl.invoke(mbean, 'ping', args)
-for i in range(10):
-    sleep(i)
     status = AdminControl.invoke(mbean, 'ping', args)
     if status == "STARTED":
         print "$WEBSERVER is started"
         break
+    sleep(i)
 else:
    print "Timed out starting $WEBSERVER"
 ENDHEREDOC
