@@ -55,7 +55,6 @@ def PluginCfgGenerator(dmgrroot, cell, node, webserver, op):
 def webserver_restart(dmgrroot, cell, node, webserver):
   mbean = AdminControl.queryNames("WebSphere:*,process=dmgr,type=WebServer")
   args = '[%s %s %s]' %(CELL, NODE, WEBSERVER)
-  print args
   status = AdminControl.invoke(mbean, 'ping', args)
   print "WebServer %s is %s" % (WEBSERVER, status)
 
