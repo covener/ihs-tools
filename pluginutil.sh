@@ -79,6 +79,7 @@ if status == "RUNNING":
     else:
        print "Timed out stopping $WEBSERVER"
 
+print "Starting $WEBSERVER"
 AdminControl.invoke(mbean, 'start', args)
 for i in range(10):
     status = AdminControl.invoke(mbean, 'ping', args)
