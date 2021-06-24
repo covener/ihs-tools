@@ -88,7 +88,7 @@ for i in range(10):
         break
     sleep(i)
 else:
-   print "Timed out starting $WEBSERVER"
+    print "Timed out starting $WEBSERVER"
 ENDHEREDOC
 ;;
 
