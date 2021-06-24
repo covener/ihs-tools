@@ -15,7 +15,7 @@
   Pass this script to wsadmin the following way, substituting a list of webserver IP addresses as the final argument:
 
    1. copy this script to $WAS_HOME/bin
-   2. ./wsadmin.sh -lang jython -user ... -password  ... -f pluginutil.py -- restart|generate|propagate|propagateKeyring webserver-name webserver-node-name
+   2. ./wsadmin.sh -lang jython [-user ... -password  ...] -f pluginutil.py -- genproprestart|restart|generate|propagate|propagateKeyring webserver-name webserver-node-name
 
 """
 
@@ -112,7 +112,7 @@ if OP == "restart":
   webserver_restart(DMGRROOT, CELL, NODE, WEBSERVER)
 elif OP == "generate" or OP == "propagate" or OP == "propagateKeyring":
   PluginCfgGenerator(DMGRROOT, CELL, NODE, WEBSERVER, OP)
-elif OP == "genpropall":
+elif OP == "genproprestart":
   print "Generate"
   PluginCfgGenerator(DMGRROOT, CELL, NODE, WEBSERVER, "generate")
   print "Propagate"
