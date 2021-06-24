@@ -36,11 +36,13 @@ shift 3
 
 # Check that the user didn't need to pass credentials as supplicant args, e.g. no soap.client.props
 
-echo "Checking wsadmin access"
-echo "print ''" | ${WAS_HOME}/bin/wsadmin.sh -lang jython "$@" | grep WASX7246E > /dev/null
-if [ $? -eq 0 ]; then
-  echo "$0 You must setup soap.client.props or pass -user ... -password ... to this command"
-  exit 1
+if [[ ! $@ == *'-password'* ]];  then
+    echo "Checking wsadmin access"
+    echo "print ''" | ${WAS_HOME}/bin/wsadmin.sh -lang jython "$@" | grep WASX7246E > /dev/null
+    if [ $? -eq 0 ]; then
+      echo "$0 You must setup soap.client.props or pass -user ... -password ... to this command"
+      exit 1
+    fi
 fi
 
 echo "Requesting mbean op: $OP"
