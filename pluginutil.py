@@ -12,34 +12,120 @@
    limitations under the License.
 
 
-  Pass this script to wsadmin the following way, substituting a list of webserver IP addresses as the final argument:
+  Pass this script to wsadmin the following way to run one of the sub-options
 
    1. copy this script to $WAS_HOME/bin
-   2. ./wsadmin.sh -lang jython [-user ... -password  ...] -f pluginutil.py -- genproprestart|restart|generate|propagate|propagateKeyring webserver-name webserver-node-name
+   2. ./wsadmin.sh -lang jython [-user ... -password  ...] -f pluginutil.py -- list|genproprestart|restart|generate|propagate|propagateKeyring webserver-name [webserver-node-name]
 
 """
 
 import sys
 import time
 import os
+import re
 
-def getNameFromId(obj_id):
-    """Returns the name from a wsadmin object id string.
 
-    For example, returns PAP_1 from the following id:
-    PAP_1(cells/ding6Cell01|coregroupbridge.xml#PeerAccessPoint_1157676511879)
+def usage():
+  print "Usage: genpropall|restart|generate|propagate|propagateKeyring webserver-name [webserver-node-name] "
+  sys.exit(1)
 
-    Returns the original id string if a left parenthesis is not found.
-    """
-    # print "getNameFromId: Entry. obj_id=" + obj_id
+def main():
+  if len(sys.argv) <=  1:
+    usage()
+
+  OP = sys.argv[0]
+  if OP == "list":
+    print AdminTask.listServers('[-serverType WEB_SERVER ]')
+    return 0
+  
+  if len(sys.argv) < 2:
+    usage()
+  
+  WEBSERVER=sys.argv[1]
+  DMGRROOT=os.environ['CONFIG_ROOT']
+  CELL = wsadminlib.getNameFromId(AdminConfig.list("Cell"))
+  NODE=""
+
+  # If the webserver name is unique, we can determine the node
+  if len(sys.argv) == 2:
+    servers = BetterAdminTask.listServers('WEB_SERVER')
+    nodematches = [s for s in servers if s.name == WEBSERVER]
+    if len(nodematches) == 1:
+       NODE = nodematches[0].node
+    elif len(nodematches) > 1:
+      print "Too many matches for webservername, specify a node on the command line " + nodematches
+      sys.exit(1)
+    else: 
+      print "No matches for webservername"
+      sys.exit(1)
+
+  if NODE == "": 
+    NODE=sys.argv[2]
+
+  if OP == "restart":
+    webserver_restart(DMGRROOT, CELL, NODE, WEBSERVER)
+  elif OP == "generate" or OP == "propagate" or OP == "propagateKeyring":
+    PluginCfgGenerator(DMGRROOT, CELL, NODE, WEBSERVER, OP)
+  elif OP == "genproprestart":
+    print "Generate"
+    PluginCfgGenerator(DMGRROOT, CELL, NODE, WEBSERVER, "generate")
+    print "Propagate"
+    PluginCfgGenerator(DMGRROOT, CELL, NODE, WEBSERVER, "propagate")
+    print "Propagate Keyring"
+    PluginCfgGenerator(DMGRROOT, CELL, NODE, WEBSERVER, "propagateKeyring")
+    print "Restart"
+    webserver_restart(DMGRROOT, CELL, NODE, WEBSERVER)
+  else: 
+    print "Unknown operation %s" %(OP)
+  
+class wsadminlib:
+  @staticmethod
+  def splitlines(s):
+    rv = [s]
+    if '\r' in s:
+      rv = s.split('\r\n')
+    elif '\n' in s:
+      rv = s.split('\n')
+    if rv[-1] == '':
+      rv = rv[:-1]
+    return rv
+  @staticmethod
+  def getNameFromId(obj_id):
     name = obj_id
     ix = obj_id.find('(')
-    # print "getNameFromId: ix=%d" % (ix)
     if ix != -1 :
         name = obj_id[0:ix]
-
-    # print "getNameFromId: Exit. name=" + name
     return name
+  @staticmethod
+  def showAttribute(id, attrname):
+    return AdminConfig.showAttribute(id, attrname)
+
+class Server:
+   def __init__(self,name, node, t):
+      self.name = name
+      self.node = node
+      self.t = t
+   def __str__(self):
+     return self.name + "," + self.node + "," + self.t
+   def __repr__(self):
+    return str(self)
+
+class BetterAdminTask:
+  @staticmethod
+  def list(objectType, pattern):
+    wsadminlib.splitlines(AdminConfig.list(objectType, pattern))
+  @staticmethod
+  def listServers(t):
+    rv = []
+    servers = AdminTask.listServers('[-serverType %s]' % t)
+    lines = wsadminlib.splitlines(servers)
+    for server in lines:
+      m = re.search('^(.+)\\(cells/[^/]+/nodes/([^/]+).*', server)
+      if m is not None:
+        rv.append(Server(m.group(1), m.group(2), t))
+      else: 
+        print server + " did not match"
+    return rv
 
 def PluginCfgGenerator(dmgrroot, cell, node, webserver, op):
   mbean = AdminControl.queryNames("WebSphere:*,process=dmgr,type=PluginCfgGenerator")
@@ -55,9 +141,9 @@ def PluginCfgGenerator(dmgrroot, cell, node, webserver, op):
 
 def webserver_restart(dmgrroot, cell, node, webserver):
   mbean = AdminControl.queryNames("WebSphere:*,process=dmgr,type=WebServer")
-  args = '[%s %s %s]' %(CELL, NODE, WEBSERVER)
+  args = '[%s %s %s]' %(cell, node, webserver)
   status = AdminControl.invoke(mbean, 'ping', args)
-  print "WebServer %s is %s" % (WEBSERVER, status)
+  print "WebServer %s is %s" % (webserver, status)
 
   if status == "RUNNING":
     print "Stopping"
@@ -86,43 +172,7 @@ def webserver_restart(dmgrroot, cell, node, webserver):
     print "Failed to start WebServer"
   print "WebServer status is %s" % status
 
-def main():
-  if len(sys.argv) <=  1:
-    print "Usage: genpropall|restart|generate|propagate|propagateKeyring webserver-name webserver-node-name "
-
-OP = sys.argv[0]
-print OP
-if OP == "list":
-  print AdminTask.listServers('[-serverType WEB_SERVER ]')
-  sys.exit(0)
-
-
-print sys.argv
-if len(sys.argv) < 3:
-  print "Usage: genpropall|restart|generate|propagate|propagateKeyring webserver-name webserver-node-name"
-  sys.exit(1)
-
-WEBSERVER=sys.argv[1]
-NODE=sys.argv[2]
-DMGRROOT=os.environ['CONFIG_ROOT']
-CELL = getNameFromId(AdminConfig.list("Cell"))
-
-if OP == "restart":
-  webserver_restart(DMGRROOT, CELL, NODE, WEBSERVER)
-elif OP == "generate" or OP == "propagate" or OP == "propagateKeyring":
-  PluginCfgGenerator(DMGRROOT, CELL, NODE, WEBSERVER, OP)
-elif OP == "genproprestart":
-  print "Generate"
-  PluginCfgGenerator(DMGRROOT, CELL, NODE, WEBSERVER, "generate")
-  print "Propagate"
-  PluginCfgGenerator(DMGRROOT, CELL, NODE, WEBSERVER, "propagate")
-  print "Propagate Keyring"
-  PluginCfgGenerator(DMGRROOT, CELL, NODE, WEBSERVER, "propagateKeyring")
-  print "Restart"
-  webserver_restart(DMGRROOT, CELL, NODE, WEBSERVER)
-else: 
-  print "Unknown operation %s" %(OP)
-
-
-
+ 
+if __name__ == "__main__":
+    main()
 
