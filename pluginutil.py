@@ -21,6 +21,7 @@
 
 import sys
 import time
+import os
 
 def getNameFromId(obj_id):
     """Returns the name from a wsadmin object id string.
@@ -101,9 +102,9 @@ if len(sys.argv) <  4:
   print "Usage:  %s genpropall|restart|generate|propagate|propagateKeyring dmgr-config webserver-name webserver-node-name " % (sys.argv[0])
   sys.exit(1)
 
-DMGRROOT=sys.argv[1]
-WEBSERVER=sys.argv[2]
-NODE=sys.argv[3]
+WEBSERVER=sys.argv[1]
+NODE=sys.argv[2]
+DMGRROOT=os.environ['CONFIG_ROOT']
 
 CELL = getNameFromId(AdminConfig.list("Cell"))
 
