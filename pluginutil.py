@@ -88,7 +88,7 @@ def webserver_restart(dmgrroot, cell, node, webserver):
 
 def main():
   if len(sys.argv) <=  1:
-    print "Usage: restart|generate|propagate|propagateKeyring dmgr-config webserver-name webserver-node-name " % (sys.argv[0])
+    print "Usage: restart|generate|propagate|propagateKeyring webserver-name webserver-node-name " % (sys.argv[0])
 
 OP = sys.argv[0]
 print OP
@@ -99,7 +99,7 @@ if OP == "list":
 
 print sys.argv
 if len(sys.argv) <  4:
-  print "Usage:  %s genpropall|restart|generate|propagate|propagateKeyring dmgr-config webserver-name webserver-node-name " % (sys.argv[0])
+  print "Usage:  %s genpropall|restart|generate|propagate|propagateKeyring webserver-name webserver-node-name " % (sys.argv[0])
   sys.exit(1)
 
 WEBSERVER=sys.argv[1]
