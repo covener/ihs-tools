@@ -9,7 +9,6 @@ IHSROOT=$HOME/ihs90
 cd /etc/letsencrypt/live/$DOMAIN
 echo "Fetching root letsencrypt CA"
 wget -q https://letsencrypt.org/certs/isrgrootx1.pem -O $PWD/isrgrootx1.pem
-wget -q https://people.apache.org/~covener/letsencrypt/dst_root.cer -O $PWD/dst.pem
 
 ls -lart
 for ext in rdb kdb crl sth; do
@@ -29,7 +28,6 @@ $IHSROOT/bin/gskcapicmd -keydb -stashpw -db $DOMAIN.kdb
 
 echo "Adding root letsencrypt CA"
 $IHSROOT/bin/gskcapicmd -cert -add -db $DOMAIN.kdb -stashed -file /etc/letsencrypt/live/$DOMAIN/isrgrootx1.pem -label isrgrootx1
-$IHSROOT/bin/gskcapicmd -cert -add -db $DOMAIN.kdb -stashed -file /etc/letsencrypt/live/$DOMAIN/dst.pem -label dst
 
 $IHSROOT/bin/gskcapicmd -cert -validate -db $DOMAIN.kdb -stashed  -label "$DOMAIN"
 $IHSROOT/bin/gskcapicmd -cert -list -db $DOMAIN.kdb -stashed 
