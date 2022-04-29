@@ -77,6 +77,11 @@ else
 NEEDPASS=0
 fi
 
+# use entitled repo by default
+if [ -z "$PKGDL" ]; then
+  PKGDL="https://www.ibm.com/software/repositorymanager/entitled"
+  echo "Using default repo $PKGDL, use -r to override"
+fi
 # Find the global IM unless -l was forced
 if [ x"$GLOBAL" = "x1" ]; then
     POSSIBLE_GLOBAL_IMS="/c/opt/Moonstone/IM /opt/IM /opt/IBM/InstallationManager /opt/Moonstone/InstallationManager /opt/Moonstone/IM"
