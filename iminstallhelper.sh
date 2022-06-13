@@ -13,16 +13,16 @@ usage() {
   printf "\n\t$0 install -r /path/to/driverdownload|URL -p com.ibm.... -i /opt/InstallRoot"
   printf "\n\nInstall fixpack (same as full install):"
   printf "\n\t$0 install -r /path/to/driverdownload|URL -p com.ibm.... -i /opt/InstallRoot"
-  printf "\n\nApply IFIX:"
-  printf "\n\t$0 update -r /path/to/ifix.zip -i /opt/InstallRoot (list ifixes in zip)"
-  printf "\n\t$0 update -r /path/to/ifix.zip -i /opt/InstallRoot -p all (install what was found)"
-  printf "\n\nRemove last IFIX:"
+  printf "\n\nUninstall package :"
   printf "\n\t$0 uninstall -i /opt/InstallRoot"
+  printf "\n\nRollback FP:"
+  printf "\n\t$0 rollback -i /opt/InstallRoot"
+  printf "\n\nApply IFIX:"
+  printf "\n\t$0 update -r /path/to/ifix.zip -i /opt/InstallRoot"
+  printf "\n\nRemove IFIX:"
+  printf "\n\t$0 uninstall-ifix -i /opt/InstallRoot"
   printf "\n\nInstall global IIM:"
   printf "\n\t$0 install-im"
-  printf "\n\nAdd credentials:"
-  printf "\n\t$0 addpass"
-  printf "\n\t$0 addpass -r https://your-repo -U user -P pass"
   printf "\n\nOptions:\n"
   printf "\t -r specifies a repo -- zip or http/https\n"
   printf "\t -U/P are user/pass for online repos. You should be prompted w/o these\n"
@@ -63,7 +63,7 @@ do
   esac
 done
 
-if [ $ACTION = "install" -o $ACTION = "update" -o $ACTION = "uninstall" ]; then
+if [ $ACTION = "install" -o $ACTION = "update" -o $ACTION = "uninstall" -o $ACTION = "rollback" ]; then
     if [ -z "$INSTDIR" ]; then
       echo "$0: -i install-path is required for install, update, or uninstall"
       exit 1
@@ -72,9 +72,9 @@ fi
 
 NEEDPASS=1
 if echo $PKGDL|grep http >/dev/null; then
-NEEDPASS=1
+  NEEDPASS=1
 else
-NEEDPASS=0
+  NEEDPASS=0
 fi
 
 # use entitled repo by default
@@ -82,6 +82,7 @@ if [ -z "$PKGDL" ]; then
   PKGDL="https://www.ibm.com/software/repositorymanager/entitled"
   echo "Using default repo $PKGDL, use -r to override"
 fi
+
 # Find the global IM unless -l was forced
 if [ x"$GLOBAL" = "x1" ]; then
     POSSIBLE_GLOBAL_IMS="/c/opt/Moonstone/IM /opt/IM /opt/IBM/InstallationManager /opt/Moonstone/InstallationManager /opt/Moonstone/IM"
@@ -317,6 +318,26 @@ if [ $ACTION = "uninstall" ]; then
     set +x
     exit 0
 fi
+if [ $ACTION = "rollback" ]; then
+    set -x
+    lisInstalledPackages
+    $IMCL $IMDATA_ARG rollback $PACKAGE -installationDirectory $INSTDIR
+    set +x
+    exit 0
+fi
+if [ $ACTION = "uninstall-ifix" ]; then
+    set -x
+    lisInstalledFixes
+    if [ ! $PKGS = "list" ]; then
+      $IMCL $IMDATA_ARG uninstall $PKGS -installationDirectory $INSTDIR
+    else 
+      echo "Pick an ifix and and re-run with -p: $FIXES"
+    fi
+    set +x
+
+    exit 0
+fi
+
 
 if [ $ACTION = "update" ];  then
   # Return value in PACKAGES
@@ -332,12 +353,11 @@ if [ $ACTION = "update" ];  then
   fi
   if [ x"${OPKGS}" = x"all" ]; then
     echo "Installing fix with: $0 $@ -p $FIXES"
-    $0 update "$@" -p $FIXES
-    exit 0
+    exec $0 update "$@" -p $FIXES
   fi
 
   installFix
-  exit 0
+  exit $?
 
 fi
 if [ $ACTION = "install" ]; then
