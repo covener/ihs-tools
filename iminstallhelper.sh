@@ -23,6 +23,8 @@ usage() {
   printf "\n\t$0 uninstall-ifix -i /opt/InstallRoot"
   printf "\n\nInstall global IIM:"
   printf "\n\t$0 install-im"
+  printf "\n\nAdd Credentials:"
+  printf "\n\t$0 addpass -U ... -P ... [-r ...]"
   printf "\n\nOptions:\n"
   printf "\t -r specifies a repo -- zip or http/https\n"
   printf "\t -U/P are user/pass for online repos. You should be prompted w/o these\n"
@@ -70,6 +72,12 @@ if [ $ACTION = "install" -o $ACTION = "update" -o $ACTION = "uninstall" -o $ACTI
     fi
 fi
 
+# use entitled repo by default
+if [ -z "$PKGDL" ]; then
+  PKGDL="https://www.ibm.com/software/repositorymanager/entitled"
+  echo "Using default repo $PKGDL, use -r to override"
+fi
+
 NEEDPASS=1
 if echo $PKGDL|grep http >/dev/null; then
   NEEDPASS=1
@@ -77,11 +85,6 @@ else
   NEEDPASS=0
 fi
 
-# use entitled repo by default
-if [ -z "$PKGDL" ]; then
-  PKGDL="https://www.ibm.com/software/repositorymanager/entitled"
-  echo "Using default repo $PKGDL, use -r to override"
-fi
 
 # Find the global IM unless -l was forced
 if [ x"$GLOBAL" = "x1" ]; then
